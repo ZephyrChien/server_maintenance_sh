@@ -1,14 +1,13 @@
 #!/bin/bash
 
 URL='https://api.github.com/repos/v2fly/v2ray-core/releases/latest'
-TAG='"v2ray-linux-64.zip"'
+TAG='v2ray-linux-64.zip' #'"v2ray-linux-64.zip"'
 INSTALL_PATH='.'
 NORMAL_CONFIG='
     {"inbounds":[{"listen":"127.0.0.1","port":0,"protocol":"vmess",
     "settings":{"clients":[{"alterId":16,"id":""}]}}],
     "outbounds":[{"protocol":"freedom","settings":{}}]}
     '
-
 try_command() {
     local is_exist=1
     for i in $*; do
@@ -30,8 +29,10 @@ get_latest_release() {
     while [ $i -lt $length ]; do
         local member=$(echo $contents|jq -c ".[$i]")
         local tag=$(echo $member|jq -c '.name')
-        if [ $tag == $TAG ]; then
-            local url=$(echo $member|jq -rc '.browser_download_url')
+        if [ $tag == \"$TAG\" ]; then
+            #some old version do not support '-r' argument 
+            #local url=$(echo $member|jq -rc '.browser_download_url')
+            local url=$(echo $member|jq -c '.browser_download_url'|sed 's/"//g')
             echo $url
             break
         fi
@@ -47,7 +48,7 @@ download_and_unpack() {
     echo '==========unzip=========='
     unzip -x $path/$TAG -d $path
     echo '==========clear=========='
-    local files=$(ls $path|grep -v 'v2ray'|grep -v 'v2ctl')
+    local files=$(ls $path|grep -v 'v2ray$'|grep -v 'v2ctl$')
     for i in $files; do
         echo 'rm' $i
         rm -rf $path/$i
@@ -58,9 +59,11 @@ update_config_file() {
     local path=${INSTALL_PATH}/v2ray
     local port=$1
     local uuid=$($path/v2ctl uuid)
+    #some old version do not support '--argjson' argument
     config=$(echo $NORMAL_CONFIG| \
-    jq --argjson p $port --arg u $uuid \
-    '.inbounds[0].port=$p|.inbounds[0].settings.clients[0].id=$u')
+    jq --arg p $port --arg u $uuid \
+    '.inbounds[0].port=$p|.inbounds[0].settings.clients[0].id=$u'| \
+    sed "s/\"$port\"/$port/")
     echo $config
 }
 
@@ -70,9 +73,10 @@ write_systemd_file() {
         exit 0
     fi
     local path=${INSTALL_PATH}/v2ray
+    local absolute_path=$(cd ${INSTALL_PATH} && pwd)
     cat > $path/auto.sh << EOF
     #!/bin/bash
-    $path/v2ray -c $path/config.json
+    ${absolute_path}/v2ray -c ${absolute_path}/config.json
 EOF
     chmod +x $path/auto.sh
 
@@ -84,7 +88,7 @@ EOF
     [Service]
     Type=simple
     PIDFile=/run/v2ray.pid
-    ExecStart=${path}/auto.sh
+    ExecStart=${absolute_path}/auto.sh
     Restart=on-failure
     [Install]
     WantedBy=multi-user.target
