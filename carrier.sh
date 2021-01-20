@@ -1,6 +1,7 @@
 #!/bin/bash
 
-base_path=''
+user_name=''
+base_path="/home/${user_name}"
 main_file_ss="${base_path}/ss/config.json"
 swap_file_ss="${base_path}/swap/ss.json"
 main_file_v2="${base_path}/v2/config.json"
@@ -22,16 +23,16 @@ while (true); do
     if [ -f "${swap_file_ss}" ]; then
         swap_hash_ss=$(md5sum -t ${swap_file_ss}|awk '{print $1}')
         if [ ${swap_hash_ss} != ${main_hash_ss} ]; then
-            cp ${swap_file_ss} ${main_file_ss}
             main_hash_ss=${swap_hash_ss}
+            sudo -u ${user_name} cp ${swap_file_ss} ${main_file_ss}
             systemctl restart ss
         fi
     fi
     if [ -f "${swap_file_v2}" ]; then
         swap_hash_v2=$(md5sum -t ${swap_file_v2}|awk '{print $1}')
         if [ ${swap_hash_v2} != ${main_hash_v2} ]; then
-            cp ${swap_file_v2} ${main_file_v2}
             main_hash_v2=${swap_hash_v2}
+            sudo -u ${user_name} cp ${swap_file_v2} ${main_file_v2}
             systemctl restart v2ray
         fi
     fi

