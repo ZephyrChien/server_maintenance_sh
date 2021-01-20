@@ -5,8 +5,7 @@ main_file_ss="${base_path}/ss/config.json"
 swap_file_ss="${base_path}/swap/ss.json"
 main_file_v2="${base_path}/v2/config.json"
 swap_file_v2="${base_path}/swap/v2.json"
-
-interval=1s
+interval=600s
 
 if [ -f "${main_file_ss}" ]; then
     cp ${main_file_ss} ${swap_file_ss}
@@ -25,7 +24,7 @@ while (true); do
         if [ ${swap_hash_ss} != ${main_hash_ss} ]; then
             cp ${swap_file_ss} ${main_file_ss}
             main_hash_ss=${swap_hash_ss}
-
+            systemctl restart ss
         fi
     fi
     if [ -f "${swap_file_v2}" ]; then
@@ -33,7 +32,7 @@ while (true); do
         if [ ${swap_hash_v2} != ${main_hash_v2} ]; then
             cp ${swap_file_v2} ${main_file_v2}
             main_hash_v2=${swap_hash_v2}
-
+            systemctl restart v2ray
         fi
     fi
     sleep ${interval}
