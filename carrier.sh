@@ -4,7 +4,7 @@ user_name=''
 base_path="/home/${user_name}"
 main_file_ss="${base_path}/ss/config.json"
 swap_file_ss="${base_path}/swap/ss.json"
-main_file_v2="${base_path}/v2/config.json"
+main_file_v2="${base_path}/v2ray/config.json"
 swap_file_v2="${base_path}/swap/v2.json"
 interval=600s
 
